@@ -44,6 +44,7 @@ click_last_status = False
 click_position_x = -1
 click_position_y = -1
 numero = 0
+last_selected_square = (-1, -1)
 
 def Tabuleiro_Hover(window, mouse_position_x, mouse_position_y):
     quadrado = 66.7
@@ -92,6 +93,23 @@ def resolver_sudoku(tabuleiro):
             tabuleiro[linha][coluna] = 'n'  # Backtrack
 
     return False  # Não encontrou solução
+
+
+def Boatao_Revelar_Solucao(window, click_position_x, click_position_y):
+    pg.draw.rect(window, verde, (700, 350, 250, 100))
+    palavra_revelar = fonte.render('Revelar Solução', True, branco)
+    window.blit(palavra_revelar, (705, 375))
+
+    mouse = pg.mouse.get_pos()
+    click = pg.mouse.get_pressed()
+    if 700 <= mouse[0] <= 950 and 350 <= mouse[1] <= 450 and click[0] == 1:
+        # Use as coordenadas passadas como argumento
+        x = click_position_x
+        y = click_position_y
+        if 0 <= x < len(jogo_data[0]) and 0 <= y < len(jogo_data):
+            if jogo_data[y][x] == 'n':
+                jogo_data[y][x] = tabuleiro_data[y][x]
+
 
 def Boatao_Restart(window):
     pg.draw.rect(window, azul, (700, 50, 250, 100))
@@ -348,6 +366,11 @@ while True:
 
     # Declarando variavel do click do mouse
     click = pg.mouse.get_pressed()
+    click_position_x, click_position_y = Celula_Selecionada(window, mouse_position_x, mouse_position_y,
+                                                            click_last_status, click[0], click_position_x,
+                                                            click_position_y)
+    if click_position_x != -1 and click_position_y != -1:
+        last_selected_square = (click_position_x, click_position_y)
 
     # Jogo
     Tabuleiro_Hover(window, mouse_position_x, mouse_position_y)
@@ -355,6 +378,7 @@ while True:
     Tabuleiro(window)
     Boatao_Restart(window)
     Boatao_Resolva(window)
+    Boatao_Revelar_Solucao(window, click_position_x, click_position_y)
     tabuleiro_data, tabuleiro_preenchido = Gabarito_do_Tabuleiro(tabuleiro_data, tabuleiro_preenchido)
     jogo_data, escondendo_numeros = Escondendo_Numeros(tabuleiro_data, jogo_data, escondendo_numeros)
     Escrevendo_Numeros(window, jogo_data)

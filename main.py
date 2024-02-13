@@ -75,10 +75,42 @@ def Tabuleiro(window):
     pg.draw.rect(window, preto, (317, 50, 67, 600), 2)
     pg.draw.rect(window, preto, (517, 50, 67, 600), 2)
 
+def resolver_sudoku(tabuleiro):
+    vazio = encontrar_vazio(tabuleiro)
+    if not vazio:
+        return True  # Tabuleiro resolvido
+
+    linha, coluna = vazio
+
+    for numero in range(1, 10):
+        if valido(tabuleiro, numero, (linha, coluna)):
+            tabuleiro[linha][coluna] = numero
+
+            if resolver_sudoku(tabuleiro):
+                return True  # Tabuleiro resolvido
+
+            tabuleiro[linha][coluna] = 'n'  # Backtrack
+
+    return False  # Não encontrou solução
+
 def Boatao_Restart(window):
     pg.draw.rect(window, azul, (700, 50, 250, 100))
     palavra_f = fonte.render('Restart', True, branco)
     window.blit(palavra_f, (725, 75))
+
+def Boatao_Resolva(window):
+    pg.draw.rect(window, vermelho, (700, 200, 250, 100))
+    palavra_r = fonte.render('Resolva', True, branco)
+    window.blit(palavra_r, (725, 225))
+
+    mouse = pg.mouse.get_pos()
+    click = pg.mouse.get_pressed()
+    if 700 <= mouse[0] <= 950 and 200 <= mouse[1] <= 300 and click[0] == 1:
+        resolver_sudoku(tabuleiro_data)
+        # Atualiza o tabuleiro do jogo com a solução encontrada
+        for i in range(len(jogo_data)):
+            for j in range(len(jogo_data[0])):
+                jogo_data[i][j] = tabuleiro_data[i][j]
 
 def Linha_Escolhida(tabuleiro_data, y):
     linha_sorteada = tabuleiro_data[y]
@@ -245,6 +277,36 @@ def Digitando_Numero(numero):
         numero = int(numero)
     return numero
 
+
+def encontrar_vazio(tabuleiro):
+    for i in range(len(tabuleiro)):
+        for j in range(len(tabuleiro[0])):
+            if tabuleiro[i][j] == 'n':
+                return (i, j)  # Retorna a posição (linha, coluna)
+    return None
+
+def valido(tabuleiro, numero, posicao):
+    # Verifica linha
+    for i in range(len(tabuleiro[0])):
+        if tabuleiro[posicao[0]][i] == numero and posicao[1] != i:
+            return False
+
+    # Verifica coluna
+    for i in range(len(tabuleiro)):
+        if tabuleiro[i][posicao[1]] == numero and posicao[0] != i:
+            return False
+
+    # Verifica quadrante
+    quadrante_x = posicao[1] // 3
+    quadrante_y = posicao[0] // 3
+
+    for i in range(quadrante_y*3, quadrante_y*3 + 3):
+        for j in range(quadrante_x*3, quadrante_x*3 + 3):
+            if tabuleiro[i][j] == numero and (i,j) != posicao:
+                return False
+
+    return True
+
 def Checando_Numero_Digitado(window, tabuleiro_data, jogo_data, click_position_x, click_position_y, numero):
     x = click_position_x
     y = click_position_y
@@ -292,6 +354,7 @@ while True:
     click_position_x, click_position_y = Celula_Selecionada(window, mouse_position_x, mouse_position_y, click_last_status, click[0], click_position_x, click_position_y)
     Tabuleiro(window)
     Boatao_Restart(window)
+    Boatao_Resolva(window)
     tabuleiro_data, tabuleiro_preenchido = Gabarito_do_Tabuleiro(tabuleiro_data, tabuleiro_preenchido)
     jogo_data, escondendo_numeros = Escondendo_Numeros(tabuleiro_data, jogo_data, escondendo_numeros)
     Escrevendo_Numeros(window, jogo_data)
